@@ -89,6 +89,10 @@ func (c *connection) reader() {
 	}
 }
 func WebSocketRun() {
+	//全局数据交互通道
+	go h.Run()
+	//离线消息交互
+	go LogoutMasRun()
 
 	fmt.Println("websocket start ============" + " ws://0.0.0.0:12358")
 	http.HandleFunc("/", Handle)
