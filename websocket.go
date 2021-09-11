@@ -22,7 +22,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	c := &connection{sc: make(chan []byte, 256), ws: ws}
+	c := &connection{sc: make(chan []byte, 521), ws: ws}
 	//获取token
 	token := r.Header.Get("token")
 	if len(token) == 0 {
@@ -85,6 +85,7 @@ func (c *connection) reader() {
 	}
 }
 func WebSocketRun() {
+
 	fmt.Println("websocket start ============" + " ws://0.0.0.0:12358")
 	http.HandleFunc("/", Handle)
 	if err := http.ListenAndServe("0.0.0.0:12358", nil); err != nil {

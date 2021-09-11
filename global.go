@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	_ "fmt"
+	"sync"
 )
 
 var h = hub{
@@ -34,6 +34,9 @@ var clientList = make(map[string]string)
 //uid 和client 的绑定关系
 var uidBindClient = make(map[string][]string)
 
+//存储uid的离线消息
+var uidLogoutMsg = make(map[string] []string)
+
 func (h *hub) Run() {
 	for {
 		select {
@@ -52,7 +55,6 @@ func (h *hub) Run() {
 			}
 		case data := <-h.b:
 			for c := range h.c {
-				fmt.Println("c", c)
 				select {
 				case c.sc <- data:
 				default:
@@ -60,6 +62,40 @@ func (h *hub) Run() {
 					close(c.sc)
 				}
 			}
+		}
+	}
+}
+var lock sync.Mutex
+func LogoutMasRun()  {
+	for  {
+		for k,v := range uidLogoutMsg  {
+			client,ok:= uidBindClient[k]
+			if !ok {
+				//fmt.Println("没有指定客户端！！")
+				continue
+			}else {
+				//fmt.Println("有指定客户端！！")
+				for _,vs := range client {
+					//为了并发安全加锁
+					lock.Lock()
+					c ,oks := u.m[vs]
+					lock.Unlock()
+					if !oks {
+						//fmt.Println("没有户端上线！！")
+						continue
+					}else {
+						if len(v) > 0 {
+							for _,vm := range v{
+								//fmt.Println("发送消息指定客户端！！")
+								c.sc <- []byte(vm)
+								continue
+							}
+						}
+					}
+				}
+				delete(uidLogoutMsg,k)
+			}
+
 		}
 	}
 }
