@@ -64,23 +64,28 @@ func process(conn net.Conn) {
 			}
 		case msg.Cmd == 5: //向指定uid发消息
 			uid := msg.Uid
-			if _, ok := uidBindClient[uid]; !ok {
+			lock.Lock()
+			client_list,ok := uidBindClient[uid] //uid 绑定的client
+			lock.Unlock()
+			if  !ok {
 				//没有在线的客户端 将消息存为离线消息
+				lock.Lock()
 				value ,ok := uidLogoutMsg[uid]
+				lock.Unlock()
 				if !ok {
 					value = make([]string,0,1)
 				}
 				value = append(value,string(m))
+				lock.Lock()
 				uidLogoutMsg[uid] = value
+				lock.Unlock()
 				fmt.Println(uidLogoutMsg)
 				w, _ := conn.Write([]byte("uid 没有在线的客户端")) // 发送数据
 				fmt.Println(w)
 				break
 			}
-			client_list := uidBindClient[uid] //uid 绑定的client
 			fmt.Println("uid 绑定客户端的:", client_list)
 			for _, v := range client_list {
-				fmt.Println("v", v)
 				client, ok := clientList[v]
 				if !ok {
 					w, _ := conn.Write([]byte("uid 没有在线的客户端")) // 发送数据

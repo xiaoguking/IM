@@ -37,6 +37,8 @@ var uidBindClient = make(map[string][]string)
 //存储uid的离线消息
 var uidLogoutMsg = make(map[string] []string)
 
+var lock sync.Mutex
+
 func (h *hub) Run() {
 	for {
 		select {
@@ -65,11 +67,13 @@ func (h *hub) Run() {
 		}
 	}
 }
-var lock sync.Mutex
+
 func LogoutMasRun()  {
 	for  {
 		for k,v := range uidLogoutMsg  {
+			lock.Lock()
 			client,ok:= uidBindClient[k]
+			lock.Unlock()
 			if !ok {
 				//fmt.Println("没有指定客户端！！")
 				continue
@@ -93,7 +97,9 @@ func LogoutMasRun()  {
 						}
 					}
 				}
+				lock.Lock()
 				delete(uidLogoutMsg,k)
+				lock.Unlock()
 			}
 
 		}

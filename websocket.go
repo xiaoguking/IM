@@ -39,12 +39,16 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	//给每一个客户端绑定一个唯一的标识码
 	u.m[client] = c
 	//绑定uid 到客户端
+	lock.Lock()
 	value, ok := uidBindClient[token]
+	lock.Unlock()
 	if !ok {
 		value = make([]string, 0, 1)
 	}
 	value = append(value, client)
+	lock.Lock()
 	uidBindClient[token] = value
+	lock.Unlock()
 	//发送全局消息
 	go c.writer()
 	//读取消息
