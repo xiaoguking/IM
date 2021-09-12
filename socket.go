@@ -15,7 +15,7 @@ type Msg struct {
 }
 
 type Body struct {
-	Type  string       `json:"type"`  //消息类型
+	Type  int       `json:"type"`  //消息类型
 	User  string       `json:"user"`  //发送者的uid
 	Content  string    `json:"content"` //消息文本内容消息
 	Extension  string  `json:"extension"` //扩展数据
@@ -86,7 +86,7 @@ func process(conn net.Conn) {
 				lock.Lock()
 				uidLogoutMsg[uid] = value
 				lock.Unlock()
-				fmt.Println(uidLogoutMsg)
+				//fmt.Println(uidLogoutMsg)
 				w, _ := conn.Write([]byte(Error("发送离线消息成功")))
 				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v",w))
 				break
