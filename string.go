@@ -5,8 +5,16 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 )
+type Response struct {
+	Code int          `json:"code"`
+	Msg  string       `json:"msg"`
+	Data interface{}  `json:"data"`
+}
+
+var r = Response{}
 
 //生成32位md5字串
 func GetMd5String(s string) string {
@@ -47,4 +55,19 @@ func delSlice(slice []string, val string) []string {
 		}
 	}
 	return newSlice
+}
+func Success(data interface{}) string {
+	r.Code = 0
+	r.Msg = ""
+	r.Data = data
+	d,_ := json.Marshal(r)
+	return string(d)
+}
+
+func Error(msg string) string {
+	r.Code = 1
+	r.Msg = msg
+	r.Data = nil
+	d,_ := json.Marshal(r)
+	return string(d)
 }

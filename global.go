@@ -37,6 +37,7 @@ var uidBindClient = make(map[string][]string)
 //存储uid的离线消息
 var uidLogoutMsg = make(map[string] []string)
 
+//引入锁
 var lock sync.Mutex
 
 func (h *hub) Run() {
@@ -90,7 +91,7 @@ func LogoutMasRun()  {
 					}else {
 						if len(v) > 0 {
 							for _,vm := range v{
-								//fmt.Println("发送消息指定客户端！！")
+								//fmt.Println("发送消息给uid上线的客户端！！")
 								c.sc <- []byte(vm)
 								continue
 							}

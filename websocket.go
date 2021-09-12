@@ -94,7 +94,7 @@ func WebSocketRun() {
 	//离线消息交互
 	go LogoutMasRun()
 
-	fmt.Println("websocket start ============" + " ws://0.0.0.0:12358")
+	fmt.Println("websocket start " + " ws://0.0.0.0:12358")
 	http.HandleFunc("/", Handle)
 	if err := http.ListenAndServe("0.0.0.0:12358", nil); err != nil {
 		fmt.Println("err:", err)

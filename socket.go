@@ -8,10 +8,18 @@ import (
 )
 
 type Msg struct {
-	Cmd    int    `json:"cmd"`
-	Body   string `json:"body"`
-	Client string `json:"client"`
-	Uid    string `json:"uid"`
+	Cmd    int     `json:"cmd"` //消息指令
+	Body   Body    `json:"body"`  //消息实体
+	Client string  `json:"client"` //指定的客户端标识码
+	Uid    string  `json:"uid"`   //指定的uid
+}
+
+type Body struct {
+	Type  string       `json:"type"`  //消息类型
+	User  string       `json:"user"`  //发送者的uid
+	Content  string    `json:"content"` //消息文本内容消息
+	Extension  string  `json:"extension"` //扩展数据
+	Image   string     `json:"image"`  //图片消息
 }
 
 func process(conn net.Conn) {
@@ -22,33 +30,32 @@ func process(conn net.Conn) {
 		var buf [512]byte
 		n, err := reader.Read(buf[:]) // 读取数据
 		if err != nil {
-			fmt.Println("read from client failed, err:", err)
+			fmt.Println("socket 客户端端口链接:", err)
 			break
 		}
 		recvStr := string(buf[:n])
 		fmt.Println("收到client端发来的数据：", recvStr)
 		json.Unmarshal(buf[:n], &msg)
-		m, _ := json.Marshal(msg)
+		m, _ := json.Marshal(msg.Body)
 		switch {
-		case msg.Cmd == 1: //发送全局广播消息
+		case msg.Cmd == CMD_SEND_TO_ALL: //发送全局广播消息
 			h.b <- m
 			w, _ := conn.Write([]byte("全局广播发送成功")) // 发送数据
 			fmt.Println(w)
-		case msg.Cmd == 2: //给指定客户端发消息
+		case msg.Cmd == CMD_CLIENT_SEND_TO_ONE: //给指定客户端发消息
 			if _, ok := u.m[msg.Client]; ok { //判断客户端是否在线
 				client := u.m[msg.Client]
 				client.sc <- m
-				w, _ := conn.Write([]byte("指定客户端发送成功")) // 发送数据
+				w, _ := conn.Write([]byte(Success(""))) // 发送数据
 				fmt.Println(w)
 			} else {
-				w, _ := conn.Write([]byte("指定客户端不在线")) // 发送数据
+				w, _ := conn.Write([]byte(Error("指定客户端不在线")))
 				fmt.Println(w)
 			}
-		case msg.Cmd == 3: //获取在线的client客户端
-			clientList, _ := json.Marshal(clientList)
-			w, _ := conn.Write([]byte(string(clientList))) // 发送数据
+		case msg.Cmd == CMD_GET_ALL_CLIENT: //获取在线的client客户端
+			w, _ := conn.Write([]byte(Success(clientList)))
 			fmt.Println(w)
-		case msg.Cmd == 4: //将uid绑定到指定客户端上
+		case msg.Cmd == CMD_BIND_UID: //将uid绑定到指定客户端上
 			clientId := msg.Client
 			Uid := msg.Uid
 			if clientId != "" && Uid != "" {
@@ -59,10 +66,10 @@ func process(conn net.Conn) {
 				}
 				value = append(value, clientId)
 				uidBindClient[key] = value
-				w, _ := conn.Write([]byte("绑定成功")) // 发送数据
+				w, _ := conn.Write([]byte(Success(""))) // 发送数据
 				fmt.Println(w)
 			}
-		case msg.Cmd == 5: //向指定uid发消息
+		case msg.Cmd == CMD_SEND_TO_UID: //向指定uid发消息
 			uid := msg.Uid
 			lock.Lock()
 			client_list,ok := uidBindClient[uid] //uid 绑定的client
@@ -80,30 +87,29 @@ func process(conn net.Conn) {
 				uidLogoutMsg[uid] = value
 				lock.Unlock()
 				fmt.Println(uidLogoutMsg)
-				w, _ := conn.Write([]byte("uid 没有在线的客户端")) // 发送数据
+				w, _ := conn.Write([]byte(Error("发送离线消息成功")))
 				fmt.Println(w)
 				break
 			}
-			fmt.Println("uid 绑定客户端的:", client_list)
+			//fmt.Println("uid 绑定客户端的:", client_list)
 			for _, v := range client_list {
 				client, ok := clientList[v]
 				if !ok {
-					w, _ := conn.Write([]byte("uid 没有在线的客户端")) // 发送数据
+					w, _ := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
 					fmt.Println(w)
 					continue
 				}
 				if _, ok := u.m[client]; ok { //判断客户端是否在线
 					client := u.m[v]
 					client.sc <- m
-					w, _ := conn.Write([]byte("指定客户端发送成功")) // 发送数据
+					w, _ := conn.Write([]byte(Success(""))) // 发送数据
 					fmt.Println(w)
 				}
-				w, _ := conn.Write([]byte("uid 没有在线的客户端")) // 发送数据
+				w, _ := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
 				fmt.Println(w)
 			}
-		case msg.Cmd == 6:
-			list, _ := json.Marshal(uidBindClient)
-			w, _ := conn.Write([]byte(list)) // 发送数据
+		case msg.Cmd == CMD_GET_CLIENT_ID_BY_UID: //获取指定uid在线的客户端
+			w, _ := conn.Write([]byte(Success(uidBindClient))) // 发送数据
 			fmt.Println(w)
 		default:
 			w, _ := conn.Write([]byte("消息类型错误")) // 发送数据
@@ -119,7 +125,12 @@ func SocketRun() {
 		fmt.Println("listen failed, err:", err)
 		return
 	}
-	fmt.Println("socket start ============" + " tcp://0.0.0.0:12356")
+	fmt.Println("socket start " + " tcp://0.0.0.0:12356")
+	fmt.Println("\r"+
+		"  _ _ _     ___  ____ \n " +
+		"  / /    / __ `__/ / \n" +
+		"  / /    / / / / / /  \n" +
+		"_/_/_   /_/ /_/ /_/  ")
 	for {
 		conn, err := listen.Accept() // 建立连接
 		if err != nil {
