@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"time"
 )
 
 type Msg struct {
@@ -131,6 +132,7 @@ func SocketRun() {
 		"  / /    / __ `__/ / \n" +
 		"  / /    / / / / / /  \n" +
 		"_/_/_   /_/ /_/ /_/  ")
+	fmt.Printf("\nIM version %v  %v",conf.Read("default","version"),time.Now().Format(time.UnixDate))
 	for {
 		conn, err := listen.Accept() // 建立连接
 		if err != nil {
