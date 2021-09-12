@@ -54,7 +54,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	//读取消息
 	c.reader()
 	defer func() {
-		fmt.Println("客户端断开链接", client)
+		SuccessLogs(fmt.Sprintf("websocket客户端断开链接 %v",client))
 		//清除在线的client客户端
 		delete(clientList, client)
 		//清除绑定uid的客户端
@@ -85,7 +85,7 @@ func (c *connection) reader() {
 			break
 		}
 		//这里需要将客户端发来的消息进行http转发
-		fmt.Println("收到客户端消息" + string(message))
+		SuccessLogs(fmt.Sprintf("收到websocket客户端消息 %v",string(message)))
 	}
 }
 func WebSocketRun() {
