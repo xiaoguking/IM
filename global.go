@@ -28,7 +28,7 @@ var u = us{
 }
 
 type us struct {
-	m map[string]*connection //cli => m 存储指定客户端消息管道
+	m map[string]*connection
 }
 
 //在线的client客户端
@@ -76,8 +76,8 @@ func (h *hub) Run() {
 			h.c[c] = true
 			c.Data.Ip = c.ws.RemoteAddr().String()
 			c.Data.Client = c.client
-			c.Data.Type = "handshake"
-			//c.Data.UserList = user_list
+			c.Data.Type = "0"
+			c.Data.UserList = getUserList()
 			data, _ := json.Marshal(c.Data)
 			c.sc <- data
 		case c := <-h.u:

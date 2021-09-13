@@ -15,9 +15,10 @@ type Msg struct {
 }
 
 type Body struct {
-	Type  int       `json:"type"`  //消息类型
+	Type  int          `json:"type"`  //消息类型
 	User  string       `json:"user"`  //发送者的uid
 	Content  string    `json:"content"` //消息文本内容消息
+	Time  string       `json:"time"`  //发送时间
 	Extension  string  `json:"extension"` //扩展数据
 	Image   string     `json:"image"`  //图片消息
 }
@@ -108,8 +109,8 @@ func process(conn net.Conn) {
 				w, _ := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
 				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v",w))
 			}
-		case msg.Cmd == CMD_GET_CLIENT_ID_BY_UID: //获取指定uid在线的客户端
-			w, _ := conn.Write([]byte(Success(uidBindClient))) // 发送数据
+		case msg.Cmd == CMD_GET_CLIENT_ID_BY_UID: //获取在线uid的客户端
+			w, _ := conn.Write([]byte(Success(uidBindClient[msg.Uid]))) // 发送数据
 			SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v",w))
 		default:
 			w, _ := conn.Write([]byte("消息类型错误")) // 发送数据

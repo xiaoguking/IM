@@ -56,6 +56,32 @@ func delSlice(slice []string, val string) []string {
 	}
 	return newSlice
 }
+
+func addSlice(slice []string , string string)  {
+	count := len(slice)
+	if count == 0 {
+		slice = append(slice,string)
+		return
+	}
+	for _,v := range slice {
+		if v == string {
+			return
+		}else {
+			slice = append(slice,string)
+			return
+		}
+
+	}
+}
+//获取在线的uid
+func  getUserList() []string {
+	//在线的uid列表
+	var  userList []string
+	for k,_ := range uidBindClient {
+		userList = append(userList,k)
+	}
+	return  userList
+}
 func Success(data interface{}) string {
 	r.Code = 0
 	r.Msg = ""

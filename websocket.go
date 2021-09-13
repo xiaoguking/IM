@@ -50,6 +50,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	lock.Lock()
 	uidBindClient[token] = value
 	lock.Unlock()
+
 	//发送全局消息
 	go c.writer()
 	//读取消息
@@ -60,6 +61,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		lock.Lock()
 		delete(clientList, client)
 		lock.Unlock()
+
 		//清除绑定uid的客户端
 		for k, v := range uidBindClient {
 			lock.Lock()

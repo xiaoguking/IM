@@ -48,8 +48,81 @@ class message
         ];
         return json_encode($data);
     }
+    /**
+     * 获取与 uid 绑定的 client_id 列表
+     *
+     * @param string $uid
+     * @return array
+     */
+    public static function getClientIdByUid($uid)
+    {
+
+    }
+
+    /**
+     * 向当前客户端连接发送消息
+     *
+     * @param string $message
+     * @return bool
+     */
+    public static function sendToCurrentClient($message)
+    {
+
+    }
+
+    /**
+     * 向所有客户端连接发送广播消息
+     *
+     * @param string $message 向客户端发送的消息
+     * @return void
+     * @throws Exception
+     */
+    public static function sendToAll($message)
+    {
+        $body = [
+                    'type' => 2,
+                    'user' => '系统通知',
+                    'content' => $message,
+                    'time' => date("Y-m-d H:i:s",time())
+                ];
+        $msg = self::enMsg(self::CMD_SEND_TO_ALL,$body);
+        self::send($msg);
+    }
+
+    /**
+     * 将 client_id 与 uid 解除绑定
+     *
+     * @param int $client_id
+     * @param int|string $uid
+     * @return void
+     */
+    public static function unbindUid($client_id, $uid)
+    {
+
+    }
+
+    /**
+     * 向所有 uid 发送
+     *
+     * @param int|string|array $uid
+     * @param string $message
+     *
+     * @return void
+     */
+    public static function sendToUid($uid, $message)
+    {
+        foreach ($uid as $value){
+            $body = [
+                'type' => 1,
+                'user' => 'admin',
+                'content' => $message,
+                'time' => date("Y-m-d H:i:s",time())
+            ];
+            $msg = self::enMsg(self::CMD_SEND_TO_UID,$body,null,$value);
+            self::send($msg);
+        }
+    }
 }
 $obj = new message();
-
-$data = $obj::enMsg($obj::CMD_SEND_TO_ALL);
-$obj::send($data);
+//$obj::sendToUid(["4","5","6"],"测试1231232131");
+$obj::sendToAll("消息开通成功");
