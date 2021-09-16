@@ -22,37 +22,36 @@ const CMD_SEND_TO_UID = 6
 const CMD_GET_CLIENT_ID_BY_UID = 7
 
 // 判断是否在线
-const CMD_IS_ONLINE = 11
+const CMD_IS_ONLINE = 8
 
 // 发踢出用户
 // 1、如果有待发消息，将在发送完后立即销毁用户连接
 // 2、如果无待发消息，将立即销毁用户连接
-const CMD_KICK = 7
+const CMD_KICK = 9
 
 // 发送立即销毁用户连接
-const CMD_DESTROY = 8
+const CMD_DESTROY = 10
 
 // 加入组
-const CMD_JOIN_GROUP = 9
+const CMD_JOIN_GROUP = 11
 
 // 离开组
-const CMD_LEAVE_GROUP = 10
+const CMD_LEAVE_GROUP = 12
 
 // 向组成员发消息
-const CMD_SEND_TO_GROUP = 11
+const CMD_SEND_TO_GROUP = 13
 
 // 获取组成员
-const CMD_GET_CLIENT_SESSIONS_BY_GROUP = 12
+const CMD_GET_CLIENT_SESSIONS_BY_GROUP = 14
 
 // 获取组在线连接数
-const CMD_GET_CLIENT_COUNT_BY_GROUP = 13
+const CMD_GET_CLIENT_COUNT_BY_GROUP = 15
 
 // 获取在线的群组ID
-const CMD_GET_GROUP_ID_LIST = 14
+const CMD_GET_GROUP_ID_LIST = 16
 
 // 取消分组
-const CMD_UNGROUP = 15
+const CMD_UNGROUP = 17
 
 // 心跳
 const CMD_PING = 201
-

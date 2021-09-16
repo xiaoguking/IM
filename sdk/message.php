@@ -19,11 +19,43 @@ class message
     // 向uid发送数据
     const CMD_SEND_TO_UID = 6;
 
-    // 根据uid获取在想的clientid
+    // 根据uid获取在线的clientid
     const CMD_GET_CLIENT_ID_BY_UID = 7;
 
     // 判断是否在线
-    const CMD_IS_ONLINE = 11;
+    const CMD_IS_ONLINE = 8;
+    // 发踢出用户
+    // 1、如果有待发消息，将在发送完后立即销毁用户连接
+    // 2、如果无待发消息，将立即销毁用户连接
+    const CMD_KICK = 9;
+
+    // 发送立即销毁用户连接
+    const CMD_DESTROY = 10;
+
+    // 加入组
+    const CMD_JOIN_GROUP = 11;
+
+    // 离开组
+    const CMD_LEAVE_GROUP = 12;
+
+    // 向组成员发消息
+    const CMD_SEND_TO_GROUP = 13;
+
+    // 获取组成员
+    const CMD_GET_CLIENT_SESSIONS_BY_GROUP = 14;
+
+    // 获取组在线连接数
+    const CMD_GET_CLIENT_COUNT_BY_GROUP = 15;
+
+    // 获取在线的群组ID
+    const CMD_GET_GROUP_ID_LIST = 16;
+
+    // 取消分组
+    const CMD_UNGROUP = 17;
+
+    // 心跳
+    const CMD_PING = 201;
+
 
     const SOCKET_HOST = "127.0.0.1:12356";
 
@@ -122,7 +154,19 @@ class message
             self::send($msg);
         }
     }
+    /**
+     * 踢掉某一个客户端
+     *
+     * @param int|string| $client
+     * @return void
+     */
+    public static function stopClient($client)
+    {
+        $msg = self::enMsg(self::CMD_KICK,[],$client);
+        self::send($msg);
+    }
 }
 $obj = new message();
-//$obj::sendToUid(["4","5","6"],"测试1231232131");
-$obj::sendToAll("消息开通成功");
+// $obj::sendToUid(["123","5","6"],"测试1231232131");
+// $obj::sendToAll("消息开通成功");
+$obj::stopClient("9d6e62771c06d8fa328e86a88bdede24");
