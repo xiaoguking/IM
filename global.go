@@ -9,13 +9,6 @@ import (
 	"sync"
 )
 
-var h = hub{
-	c: make(map[*connection]bool),
-	u: make(chan *connection),
-	b: make(chan []byte, 512),
-	r: make(chan *connection),
-}
-
 type hub struct {
 	c map[*connection]bool
 	b chan []byte
@@ -23,31 +16,44 @@ type hub struct {
 	u chan *connection
 }
 
-var u = us{
-	m: make(map[string]*connection),
-}
-
 type us struct {
 	m map[string]*connection
 }
 
-//在线的client客户端
-var clientList = make(map[string]string)
+var (
+	h = hub{
+		c: make(map[*connection]bool),
+		u: make(chan *connection),
+		b: make(chan []byte, 512),
+		r: make(chan *connection),
+	}
 
-//uid 和client 的绑定关系
-var uidBindClient = make(map[string][]string)
+	u = us{
+		m: make(map[string]*connection),
+	}
+	//在线的client客户端
+	clientList = make(map[string]string)
 
-//存储uid的离线消息
-var uidLogoutMsg = make(map[string] []string)
+	//uid 和client 的绑定关系
+	uidBindClient = make(map[string][]string)
 
-//引入锁
-var lock sync.Mutex
+	//存储uid的离线消息
+	uidLogoutMsg = make(map[string][]string)
 
-var logfile *os.File
+	//引入锁
+	lock sync.Mutex
 
-var conf *Config
+	//log操作
+	logfile *os.File
 
-func init()  {
+	//全局配置
+	conf *Config
+)
+
+//初始化命令行
+//初始化log
+//初始化配置
+func init() {
 	var logpath string
 	var confpath string
 
@@ -98,28 +104,28 @@ func (h *hub) Run() {
 	}
 }
 
-func LogoutMasRun()  {
-	for  {
-		for k,v := range uidLogoutMsg  {
+func LogoutMasRun() {
+	for {
+		for k, v := range uidLogoutMsg {
 			lock.Lock()
-			client,ok:= uidBindClient[k]
+			client, ok := uidBindClient[k]
 			lock.Unlock()
 			if !ok {
 				//fmt.Println("没有指定客户端！！")
 				continue
-			}else {
+			} else {
 				//fmt.Println("有指定客户端！！")
-				for _,vs := range client {
+				for _, vs := range client {
 					//为了并发安全加锁
 					lock.Lock()
-					c ,oks := u.m[vs]
+					c, oks := u.m[vs]
 					lock.Unlock()
 					if !oks {
 						//fmt.Println("没有户端上线！！")
 						continue
-					}else {
+					} else {
 						if len(v) > 0 {
-							for _,vm := range v{
+							for _, vm := range v {
 								//fmt.Println("发送消息给uid上线的客户端！！")
 								c.sc <- []byte(vm)
 								continue
@@ -128,7 +134,7 @@ func LogoutMasRun()  {
 					}
 				}
 				lock.Lock()
-				delete(uidLogoutMsg,k)
+				delete(uidLogoutMsg, k)
 				lock.Unlock()
 			}
 
