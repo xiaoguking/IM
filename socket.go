@@ -32,7 +32,7 @@ func process(conn net.Conn) {
 		var buf [512]byte
 		n, err := reader.Read(buf[:]) // 读取数据
 		if err != nil {
-			SuccessLogs(fmt.Sprintf("socket 客户端连接异常 err %v", err))
+			ErrorLogs(fmt.Sprintf("socket 客户端连接异常 err %v", err))
 			break
 		}
 		recvStr := string(buf[:n])
@@ -42,21 +42,37 @@ func process(conn net.Conn) {
 		switch {
 		case msg.Cmd == CMD_SEND_TO_ALL: //发送全局广播消息
 			h.b <- m
-			w, _ := conn.Write([]byte("全局广播发送成功")) // 发送数据
-			SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+			w, errs := conn.Write([]byte(Success(""))) // 发送数据
+			if errs != nil {
+				ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+				break
+			}
+			SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 		case msg.Cmd == CMD_CLIENT_SEND_TO_ONE: //给指定客户端发消息
 			if _, ok := u.m[msg.Client]; ok { //判断客户端是否在线
 				client := u.m[msg.Client]
 				client.sc <- m
-				w, _ := conn.Write([]byte(Success(""))) // 发送数据
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Success(""))) // 发送数据
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 			} else {
-				w, _ := conn.Write([]byte(Error("指定客户端不在线")))
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Error("指定客户端不在线")))
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 			}
 		case msg.Cmd == CMD_GET_ALL_CLIENT: //获取在线的client客户端
-			w, _ := conn.Write([]byte(Success(clientList)))
-			fmt.Println(w)
+			w, errs := conn.Write([]byte(Success(clientList)))
+			if errs != nil {
+				ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+				break
+			}
+			SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 		case msg.Cmd == CMD_BIND_UID: //将uid绑定到指定客户端上
 			clientId := msg.Client
 			Uid := msg.Uid
@@ -68,8 +84,12 @@ func process(conn net.Conn) {
 				}
 				value = append(value, clientId)
 				uidBindClient[key] = value
-				w, _ := conn.Write([]byte(Success(""))) // 发送数据
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Success(""))) // 发送数据
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 			}
 		case msg.Cmd == CMD_SEND_TO_UID: //向指定uid发消息
 			uid := msg.Uid
@@ -89,46 +109,77 @@ func process(conn net.Conn) {
 				uidLogoutMsg[uid] = value
 				lock.Unlock()
 				//fmt.Println(uidLogoutMsg)
-				w, _ := conn.Write([]byte(Error("发送离线消息成功")))
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Error("发送离线消息成功")))
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 				break
 			}
 			//fmt.Println("uid 绑定客户端的:", client_list)
 			for _, v := range client_list {
 				client, ok := clientList[v]
 				if !ok {
-					w, _ := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
-					fmt.Println(w)
+					w, errs := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
+					if errs != nil {
+						ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					}
+					SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 					continue
 				}
 				if _, ok := u.m[client]; ok { //判断客户端是否在线
 					client := u.m[v]
 					client.sc <- m
-					w, _ := conn.Write([]byte(Success(""))) // 发送数据
-					SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+					w, errs := conn.Write([]byte(Success(""))) // 发送数据
+					if errs != nil {
+						ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+						break
+					}
+					SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 				}
-				w, _ := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Error("uid 没有在线的客户端"))) // 发送数据
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 			}
 		case msg.Cmd == CMD_GET_CLIENT_ID_BY_UID: //获取在线uid的客户端
-			w, _ := conn.Write([]byte(Success(uidBindClient[msg.Uid]))) // 发送数据
-			SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+			w, errs := conn.Write([]byte(Success(uidBindClient[msg.Uid]))) // 发送数据
+			if errs != nil {
+				ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+				break
+			}
+			SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 		case msg.Cmd == CMD_JOIN_GROUP: //加入群组
 
 		case msg.Cmd == CMD_KICK: //踢出某一个客户端
 			client := msg.Client
 			c, ok := u.m[client]
 			if !ok {
-				w, _ := conn.Write([]byte(Success("客户端不在线"))) // 发送数据
-				SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+				w, errs := conn.Write([]byte(Success("客户端不在线"))) // 发送数据
+				if errs != nil {
+					ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+					break
+				}
+				SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 				break
 			}
-			c.ws.Close()                                    //断开链接
-			w, _ := conn.Write([]byte(Success(clientList))) // 发送数据
-			SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+			c.ws.Close()                                       //断开链接
+			w, errs := conn.Write([]byte(Success(clientList))) // 发送数据
+			if errs != nil {
+				ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+				break
+			}
+			SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 		default:
-			w, _ := conn.Write([]byte("消息类型错误")) // 发送数据
-			SuccessLogs(fmt.Sprintf("socket 客户端消息发送成功 "+"字节数据 %v", w))
+			w, errs := conn.Write([]byte("消息类型错误")) // 发送数据
+			if errs != nil {
+				ErrorLogs(fmt.Sprintf("socket 客户端消息发送失败 error: %v", errs))
+				break
+			}
+			SuccessLogs(fmt.Sprintf("发送成功 字节数 %v", w))
 		}
 
 	}
